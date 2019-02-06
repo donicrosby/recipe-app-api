@@ -1,4 +1,4 @@
 #!/bin/bash
 run-tests() {
-    docker-compose run $1 sh -c "python manage.py test && flake8"
+    docker-compose run $1 sh -c "python manage.py test && flake8 ."
 }
