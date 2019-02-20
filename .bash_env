@@ -2,3 +2,7 @@
 run-tests() {
     docker-compose run --rm $1 sh -c "python manage.py test && flake8 ."
 }
+
+make-migrations() {
+    docker-compose run --rm $1 sh -c "python manage.py makemigrations"
+}
