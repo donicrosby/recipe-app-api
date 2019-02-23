@@ -171,3 +171,52 @@ class RecipePrivateAPITests(TestCase):
         self.assertEqual(ingrs.count(), 2)
         self.assertIn(ingr1, ingrs)
         self.assertIn(ingr2, ingrs)
+
+    def test_update_partial_recipe(self):
+        """Test updating a recipe with patch"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user))
+
+        new_tag = sample_tag(user=self.user, name='Curry')
+
+        payload = {'title': 'Chicken Tikka', 'tags': [new_tag.id]}
+        url = detail_url(recipe.id)
+        self.client.patch(url, payload)
+
+        recipe.refresh_from_db()
+
+        for key in payload.keys():
+            if key == 'tags':
+                self.assertEqual(payload[key],
+                                 list(recipe.tags.all()
+                                      .values_list('id', flat=True)))
+            elif key == 'ingredients':
+                self.assertEqual(payload[key],
+                                 list(recipe.ingredients.all()
+                                      .values_list('id', flat=True)))
+            else:
+                self.assertEqual(payload[key], getattr(recipe, key))
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 1)
+        self.assertIn(new_tag, tags)
+
+    def test_update_full_recipe(self):
+        """Test updating a recipe with put"""
+        recipe = sample_recipe(user=self.user)
+        recipe.tags.add(sample_tag(user=self.user, name='Kosher'))
+
+        payload = {
+            'title': 'Matzoh Ball Soup',
+            'time_minutes': 240,
+            'price': 20.00
+        }
+
+        url = detail_url(recipe.id)
+        self.client.put(url, payload)
+
+        recipe.refresh_from_db()
+        for key in payload.keys():
+            self.assertEqual(payload[key], getattr(recipe, key))
+
+        tags = recipe.tags.all()
+        self.assertEqual(len(tags), 0)
